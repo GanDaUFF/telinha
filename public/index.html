@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Telinha</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Tela de entrada -->
+  <main id="lobby" class="lobby">
+    <form id="joinForm" class="card">
+      <h1>🖥️ Telinha</h1>
+      <p class="sub">Compartilhamento de tela entre amigos. Sem login.</p>
+
+      <label>Seu apelido
+        <input id="nick" maxlength="32" placeholder="ex: Henrique" required>
+      </label>
+      <label>Sessão
+        <input id="session" maxlength="64" placeholder="ex: jogatina" required autocomplete="off">
+      </label>
+      <label>Senha <span class="hint">(opcional — quem cria a sessão define)</span>
+        <input id="password" type="password" maxlength="128" autocomplete="new-password">
+      </label>
+
+      <button type="submit" class="primary">Entrar</button>
+      <p id="joinStatus" class="hint" hidden></p>
+      <p id="joinError" class="error" hidden></p>
+      <div id="recent" class="recent" hidden>
+        <span class="hint">Sessões recentes (clique para entrar)</span>
+        <div id="recentList" class="recent-list"></div>
+      </div>
+      <button type="button" class="download-btn">Baixar o app do Telinha (Windows)</button>
+    </form>
+  </main>
+
+  <!-- Sala -->
+  <div id="room" class="room" hidden>
+    <header class="topbar">
+      <div class="title">
+        <strong id="roomName"></strong>
+        <span id="lockIcon" title="Sessão protegida por senha" hidden>🔒</span>
+        <span id="peerCount" class="pill"></span>
+        <span id="connState" class="pill warn" title="A conexão com o servidor caiu. As telas continuam; o chat volta quando reconectar." hidden>reconectando...</span>
+      </div>
+      <div class="actions">
+        <select id="quality" title="Qualidade da sua transmissão (dá para mudar durante)">
+          <option value="auto" selected>Qualidade: automática</option>
+          <option value="ultra">Ultra (4K)</option>
+          <option value="qhd">2K (1440p)</option>
+          <option value="alta">Alta (1080p)</option>
+          <option value="media">Média (720p)</option>
+          <option value="baixa">Baixa (480p)</option>
+          <option value="minima">Mínima (360p)</option>
+        </select>
+        <select id="mode" title="Otimizar para">
+          <option value="detail">Nitidez (texto/código)</option>
+          <option value="motion">Fluidez (jogos/vídeo)</option>
+        </select>
+        <select id="fps" title="Quadros por segundo">
+          <option value="15">15 fps</option>
+          <option value="30" selected>30 fps</option>
+          <option value="60">60 fps</option>
+        </select>
+        <button id="camBtn" title="Ligar sua webcam para a galera">📷 Câmera</button>
+        <button id="bellBtn" title="Toca &quot;Diga que valeu&quot; (Bell Marques) para todo mundo da call">🎺 Diga que valeu</button>
+        <button id="gameBtn" title="Pesa menos no PC enquanto você joga: placa de vídeo, 720p, 30 fps e sem prévia">🎮 Modo jogo</button>
+        <button id="shareBtn" class="primary">Compartilhar tela</button>
+        <button id="switchBtn" hidden title="Trocar a janela/tela compartilhada ou reiniciar a transmissão, sem derrubar ninguém">🔄 Trocar/reiniciar</button>
+        <button id="audioBtn" hidden title="Liga/desliga o som do seu PC na transmissão (use se sua voz ou a do Discord estiver vazando)">🔊 Som da tela</button>
+        <button id="planBBtn" hidden title="Manda sua tela pelo plano B para todo mundo (use se alguém não estiver vendo)">Plano B p/ todos</button>
+        <button id="settingsBtn" title="Configurações">⚙</button>
+        <button id="logsBtn" title="Logs e diagnóstico de conexão">📋 Logs</button>
+        <button type="button" class="download-btn" title="Baixar o app para Windows">Baixar app</button>
+        <button id="updateBtn" class="download-btn update" hidden>Atualizar app</button>
+        <button id="copyBtn" title="Copiar link da sessão">🔗 Link</button>
+        <button id="leaveBtn" class="danger">Sair</button>
+      </div>
+    </header>
+
+    <div id="settingsPanel" class="settings" hidden>
+      <div class="settings-head"><strong>Configurações</strong><button id="settingsClose" title="Fechar">✕</button></div>
+      <label>Suavidade (para quem assiste)
+        <select id="smooth">
+          <option value="low">Menor atraso (como antes)</option>
+          <option value="normal">Equilibrado</option>
+          <option value="smooth">Mais suave (+atraso)</option>
+        </select>
+        <span class="hint">Se a tela dá umas engasgadas, use "Mais suave": fica uns décimos de segundo atrasado, mas fluido.</span>
+      </label>
+      <label>Codec de vídeo (para quem compartilha)
+        <select id="codec">
+          <option value="auto">Padrão do navegador (VP8, como antes)</option>
+          <option value="h264">H.264 (mais fps, usa a placa de vídeo)</option>
+          <option value="vp9">VP9 (mais qualidade, pesa mais)</option>
+          <option value="av1">AV1 (mais novo, pesa bastante)</option>
+        </select>
+        <span class="hint">Se travar ou engasgar, volte para o padrão. Muda na hora.</span>
+      </label>
+      <label>Clipes e replay (para quem assiste)
+        <select id="clips">
+          <option value="720">Ligado · 720p (leve)</option>
+          <option value="1080">Ligado · 1080p</option>
+          <option value="off">Desligado</option>
+        </select>
+        <span class="hint">Guarda o último minuto de cada live que você assiste (usa a placa de vídeo e ~20 MB de memória por live). 🎬 salva um clipe MP4; ⏪ abre o replay.</span>
+      </label>
+      <label>Duração do clipe
+        <select id="clipLen">
+          <option value="15">15 segundos</option>
+          <option value="30">30 segundos</option>
+          <option value="60">1 minuto</option>
+        </select>
+      </label>
+      <div class="setting-row">
+        <strong>Conexão direta</strong>
+        <span class="hint">Se alguém sempre cai no plano B, o IPv6 costuma resolver (sem NAT no caminho).</span>
+        <button id="ipv6Btn" type="button">🌐 Assistente de IPv6</button>
+      </div>
+      <label id="appAudioRow" hidden>Som da transmissão (app)
+        <select id="appAudio">
+          <option value="nodiscord">Tudo menos o Discord</option>
+          <option value="app">Só o programa que estou mostrando</option>
+          <option value="all">Todo o som do PC</option>
+        </select>
+        <span class="hint">"Só o programa" funciona ao compartilhar uma janela (ex.: o jogo). Muda na hora.</span>
+      </label>
+      <p class="hint">Fica salvo neste navegador.</p>
+    </div>
+
+    <div class="body">
+      <section id="stage" class="stage">
+        <div id="camBar" class="cam-bar" hidden></div>
+        <div id="empty" class="empty">Ninguém está compartilhando ainda.<br>Clique em <b>Compartilhar tela</b> para começar.</div>
+      </section>
+
+      <aside class="side">
+        <h3>Participantes</h3>
+        <ul id="peerList" class="peers"></ul>
+        <h3>Chat</h3>
+        <div id="chatLog" class="chat-log"></div>
+        <form id="chatForm" class="chat-form">
+          <input id="chatInput" maxlength="1000" placeholder="Mensagem..." autocomplete="off">
+          <button>Enviar</button>
+        </form>
+      </aside>
+    </div>
+  </div>
+
+  <div id="replay" class="replay" hidden>
+    <div class="replay-box">
+      <div class="settings-head"><strong id="replayTitle">Replay</strong><button id="replayClose" title="Fechar e voltar para a live">✕</button></div>
+      <video id="replayVideo" controls playsinline></video>
+      <div class="replay-actions"><span class="hint">A live continua rolando por trás. Arraste a barra para voltar.</span><button id="replaySave" class="primary">🎬 Salvar como clipe</button></div>
+    </div>
+  </div>
+  <div id="logs" class="replay" hidden>
+    <div class="replay-box logs-box">
+      <div class="settings-head"><strong>📋 Logs e diagnóstico</strong><button id="logsClose" title="Fechar">✕</button></div>
+      <div id="logMyNet"></div>
+      <h4>Conexões</h4>
+      <div id="logPeers" class="log-peers"></div>
+      <h4>Eventos</h4>
+      <pre id="logEvents" class="log-events"></pre>
+      <div class="replay-actions">
+        <span class="hint">A conexão direta depende do tipo de rede dos dois lados. Se não der, o plano B entra sozinho.</span>
+        <span><button id="logsRetest">Testar rede de novo</button> <button id="logsCopy" class="primary">Copiar logs</button></span>
+      </div>
+    </div>
+  </div>
+  <div id="ipv6" class="replay" hidden>
+    <div class="replay-box logs-box ipv6-box">
+      <div class="settings-head"><strong>🌐 Assistente de IPv6</strong><button id="ipv6Close" title="Fechar">✕</button></div>
+      <p class="hint">Com IPv6 nos dois lados, a conexão direta funciona mesmo quando a operadora usa CGNAT / NAT simétrico.</p>
+      <div id="ipv6Steps" class="log-peers"></div>
+      <div class="replay-actions"><span class="hint">Mudou algo no roteador? Reinicie-o, espere 1 minuto e teste de novo.</span><button id="ipv6Retest" class="primary">Testar de novo</button></div>
+    </div>
+  </div>
+  <div id="duelInvite" class="duel-invite" hidden>
+    <span id="duelInviteText"></span>
+    <span class="hint">Liga a câmera e farma aura num desafio. O sistema analisa o rosto e dá a nota. Quem perder, perde aura.</span>
+    <div><button id="duelAccept" class="primary">⚔️ Aceitar</button> <button id="duelDecline">Arregar 🐔</button></div>
+  </div>
+  <div id="duel" class="replay duel" hidden>
+    <div class="replay-box duel-box">
+      <div class="settings-head"><strong>⚔️ Duelo de Aura</strong><button id="duelClose" title="Fechar">✕</button></div>
+      <div class="duel-phase"></div>
+      <div class="duel-hint hint"></div>
+      <div class="duel-prompt"></div>
+      <div class="duel-cams">
+        <div class="duel-cam" data-side="a"><div class="duel-info"><b class="duel-name"></b><span class="duel-score"></span></div><div class="duel-meter"><i></i></div><span class="duel-tag"></span><span class="duel-delta" hidden></span><button class="duel-act primary"></button></div>
+        <div class="duel-vs">VS</div>
+        <div class="duel-cam" data-side="b"><div class="duel-info"><b class="duel-name"></b><span class="duel-score"></span></div><div class="duel-meter"><i></i></div><span class="duel-tag"></span><span class="duel-delta" hidden></span><button class="duel-act primary"></button></div>
+      </div>
+    </div>
+  </div>
+  <div id="bell" class="bell" hidden>
+    <div class="settings-head"><strong>🎺 Diga que valeu!</strong><button id="bellClose" title="Fechar">✕</button></div>
+    <span class="bell-who hint"></span>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+  <span id="appVersion" class="app-version"></span>
+  <script>window.MEME_URL = "https://www.google.com/search?q=gordo+gay+peludo&amp;sca_esv=d11bf3d68244a04c&amp;udm=2&amp;biw=1280&amp;bih=593&amp;sxsrf=APpeQnt6szqdS1eRYJaD51kP0iEVZ8eKkw%3A1792024305552&amp;ei=8R7QapqHIaKP5OUPzvSNyQw&amp;ved=2ahUKEwjaw6Th4rqXAxWiB7kGHU56I8kQ4dUDegQIBhAN&amp;uact=5&amp;oq=gordo+gay+peludo&amp;gs_lp=Egtnd3Mtd2l6LWltZyIQZ29yZG8gZ2F5IHBlbHVkb0ieGVAAWJwXcAB4AJABAJgB4wWgAa8kqgELMC44LjQuNS0zLjG4AQPIAQD4AQGYAgqgAokPwgIHECMYyQIYJ8ICCxAAGIAEGLEDGIMBwgIIEAAYgAQYsQPCAgoQABiABBiKBRhDwgIFEAAYgATCAgYQABgeGArCAgQQABgemAMAkgcFMC42LjSgB8UxsgcFMC42LjS4B4kPwgcFMi01LjXIB06ACAE&amp;sclient=gws-wiz-img";</script>
+  <script src="vendor/mp4-muxer.min.js"></script>
+  <script src="clips.js"></script>
+  <script src="diag.js"></script>
+  <script src="app.js"></script>
+  <script src="aura.js"></script>
+  <script src="cam.js"></script>
+</body>
+</html>

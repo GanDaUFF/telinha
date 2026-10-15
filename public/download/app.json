@@ -1,0 +1,13 @@
+{
+  "name": "Telinha-1.2.0.exe",
+  "version": "1.2.0",
+  "size": 109358339,
+  "sha256": "9f06f3142a2b2298dc11d91fcdf80ff9962426de400a529f8c1f3b690e7a5189",
+  "parts": [
+    "Telinha-1.2.0.exe.part0",
+    "Telinha-1.2.0.exe.part1",
+    "Telinha-1.2.0.exe.part2",
+    "Telinha-1.2.0.exe.part3",
+    "Telinha-1.2.0.exe.part4"
+  ]
+}

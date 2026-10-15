@@ -1,0 +1,26 @@
+{
+  "name": "telinha-desktop",
+  "productName": "Telinha",
+  "version": "1.2.0",
+  "description": "App do Telinha para quem transmite: áudio sem o Discord e sem lentidão em segundo plano.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "local": "set TELINHA_URL=http://localhost:3211&& electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "44.4.5",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "app.telinha.desktop",
+    "productName": "Telinha",
+    "artifactName": "Telinha-${version}.exe",
+    "files": ["main.js", "preload.js", "picker.html", "picker-preload.js", "icon.png"],
+    "extraResources": [{ "from": "bin", "to": "bin" }],
+    "win": { "target": "portable", "icon": "icon.png" },
+    "directories": { "output": "release" }
+  }
+}

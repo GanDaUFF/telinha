@@ -1,0 +1,20 @@
+{
+  "name": "telinha",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "local": "node server.js --no-tunnel",
+    "deploy": "wrangler deploy",
+    "dev:cf": "wrangler dev"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "Compartilhamento de tela entre amigos (WebRTC) com túnel Cloudflare",
+  "dependencies": {
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.86.0"
+  }
+}

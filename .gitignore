@@ -1,0 +1,9 @@
+node_modules/
+.wrangler/
+desktop/node_modules/
+desktop/dist/
+audio-helper/target/
+desktop/release/
+
+# Pedaços do .exe para o download do site (gerados por scripts/split-app.js)
+public/download/*.part*
