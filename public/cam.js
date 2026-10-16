@@ -928,16 +928,27 @@ $('bellClose').addEventListener('click', () => {
   $('bell').hidden = true;
 });
 
-// 🤫 Botão secreto (quase invisível, no fim da barra da sala): abre um vídeo
+// 🤫 Botão secreto (sequência de cliques nos cantos, ver abaixo): abre um vídeo
 // grande no meio da tela de todo mundo. Não diz quem apertou.
 const SECRET_VIDEO = '96onVO19vuc';
 let secretLast = 0;
 
-$('secretBtn').addEventListener('click', () => {
-  if (Date.now() - secretLast < 10000) return;
-  camBroadcast({ secret: true });
-  playSecret();
-});
+// A senha é uma sequência de cliques: canto de cima à direita e, em até 4 s,
+// canto de baixo à esquerda (os dois a até 80 px da ponta da janela).
+let secretStep = 0;
+document.addEventListener('pointerdown', (e) => {
+  if ($('room').hidden) return;
+  const C = 80;
+  const topRight = e.clientX > innerWidth - C && e.clientY < C;
+  const bottomLeft = e.clientX < C && e.clientY > innerHeight - C;
+  if (topRight) secretStep = Date.now();
+  else if (bottomLeft && secretStep && Date.now() - secretStep < 4000) {
+    secretStep = 0;
+    if (Date.now() - secretLast < 10000) return;
+    camBroadcast({ secret: true });
+    playSecret();
+  } else secretStep = 0;
+}, true);
 
 function playSecret() {
   secretLast = Date.now();
