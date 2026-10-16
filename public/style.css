@@ -282,3 +282,8 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
 .duel-meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8c78ff, #ffd76a); transition: width .25s; }
 .duel-tag { font-weight: 700; min-height: 1.3em; }
 .tile .unmute { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3; font-size: 15px; padding: 10px 16px; box-shadow: 0 4px 18px rgba(0,0,0,.5); }
+.secret-btn { opacity: .06; background: transparent !important; border-color: transparent !important; padding: 4px 6px; min-width: 0; cursor: default; }
+.secret { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.secret-box { position: relative; width: min(900px, 100%); }
+.secret-box iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; display: block; box-shadow: 0 12px 40px rgba(0,0,0,.6); }
+#secretClose { position: absolute; top: -40px; right: 0; }

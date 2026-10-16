@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 
 // Versão mostrada no canto da tela (aumente a cada deploy).
-const APP_VERSION = '1.13.1';
+const APP_VERSION = '1.13.2';
 $('appVersion').textContent = 'Telinha v' + APP_VERSION + (window.telinhaApp ? ' · app' : '');
 
 let ws;

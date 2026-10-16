@@ -380,6 +380,10 @@ function onExtraSignal(from, data) {
     playBell(peers.get(from)?.name || 'Alguém');
     return true;
   }
+  if (data.secret) {
+    playSecret();
+    return true;
+  }
   return false;
 }
 
@@ -922,4 +926,32 @@ function playBell(from) {
 $('bellClose').addEventListener('click', () => {
   $('bell').querySelector('iframe')?.remove();
   $('bell').hidden = true;
+});
+
+// 🤫 Botão secreto (quase invisível, no fim da barra da sala): abre um vídeo
+// grande no meio da tela de todo mundo. Não diz quem apertou.
+const SECRET_VIDEO = '96onVO19vuc';
+let secretLast = 0;
+
+$('secretBtn').addEventListener('click', () => {
+  if (Date.now() - secretLast < 10000) return;
+  camBroadcast({ secret: true });
+  playSecret();
+});
+
+function playSecret() {
+  secretLast = Date.now();
+  const box = $('secret');
+  box.querySelector('iframe')?.remove();
+  const f = document.createElement('iframe');
+  f.src = `https://www.youtube.com/embed/${SECRET_VIDEO}?autoplay=1&playsinline=1&rel=0`;
+  f.allow = 'autoplay; encrypted-media; picture-in-picture';
+  f.referrerPolicy = 'strict-origin-when-cross-origin';
+  f.title = '🤫';
+  box.querySelector('.secret-box').append(f);
+  box.hidden = false;
+}
+$('secretClose').addEventListener('click', () => {
+  $('secret').querySelector('iframe')?.remove();
+  $('secret').hidden = true;
 });
