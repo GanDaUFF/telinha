@@ -281,3 +281,4 @@ input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1
 .duel-meter { width: 100%; height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
 .duel-meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8c78ff, #ffd76a); transition: width .25s; }
 .duel-tag { font-weight: 700; min-height: 1.3em; }
+.tile .unmute { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3; font-size: 15px; padding: 10px 16px; box-shadow: 0 4px 18px rgba(0,0,0,.5); }

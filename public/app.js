@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 
 // Versão mostrada no canto da tela (aumente a cada deploy).
-const APP_VERSION = '1.13.0';
+const APP_VERSION = '1.13.1';
 $('appVersion').textContent = 'Telinha v' + APP_VERSION + (window.telinhaApp ? ' · app' : '');
 
 let ws;
@@ -1491,7 +1491,12 @@ function onRelayAudio(r, sampleRate, numberOfChannels, timestamp, data) {
     r.gain.gain.value = r.volume;
     r.gain.connect(r.audioCtx.destination);
   }
-  if (r.audioCtx.state === 'suspended') r.audioCtx.resume().catch(() => {});
+  if (r.audioCtx.state === 'suspended' && performance.now() - (r.resumeAt || 0) > 1000) {
+    // Sem clique na página o navegador não deixa: continua suspenso.
+    r.resumeAt = performance.now();
+    r.audioCtx.resume().catch(() => {});
+    setTimeout(() => r.audioCtx?.state === 'suspended' && relayIn.get(r.id) === r && markSoundBlocked(r.id, null), 800);
+  }
   const fmt = `${sampleRate}/${numberOfChannels}`;
   if (!r.adec || r.adec.state === 'closed' || r.afmt !== fmt) {
     if (r.adec && r.adec.state !== 'closed') r.adec.close();
@@ -1773,7 +1778,7 @@ function closeClips(id) {
 // Conexão direta: lê os quadros/áudio da live (cópias das trilhas) para a memória.
 function startClipTap(id, stream) {
   const old = clipTaps.get(id);
-  if (old && old.stream === stream) return;
+  if (old && old.stream === stream && old.count === stream.getTracks().length) return;
   stopClipTap(id);
   if (!ensureClipBuffer(id)) return;
   const tracks = stream.getTracks().map((t) => t.clone());
@@ -1794,6 +1799,7 @@ function startClipTap(id, stream) {
   tracks.forEach(pump);
   clipTaps.set(id, {
     stream,
+    count: tracks.length,
     stop() {
       running = false;
       tracks.forEach((t) => t.stop());
@@ -1975,7 +1981,7 @@ function showTile(id, stream, isLocal) {
     video.muted = isLocal;
     tile = createTile(id, video, {
       isLocal,
-      onVolume: isLocal ? null : (v) => (video.volume = v),
+      onVolume: isLocal ? null : (v) => ((video.volume = v), unmuteVideo(id)),
       onPlanB: isLocal ? null : () => relaySubscribe(id, 'manual'),
       onQuality: isLocal ? null : (v) => askQuality(id, v),
       onPreview: isLocal ? () => setPreview(!settings.preview) : null,
@@ -1986,16 +1992,62 @@ function showTile(id, stream, isLocal) {
   if (!isLocal) startClipTap(id, stream);
   if (video && video.srcObject !== stream) {
     video.srcObject = stream;
-    video.play().catch((err) => {
-      if (err.name !== 'NotAllowedError' || !video.isConnected) return;
-      // Autoplay com áudio bloqueado: toca mudo e avisa.
-      video.muted = true;
-      video.play().catch(() => {});
-      toast('Áudio bloqueado pelo navegador. Clique no vídeo para ativar.');
-      video.addEventListener('click', () => (video.muted = false), { once: true });
-    });
+    playTileVideo(id, video, isLocal);
+  } else if (video && !isLocal && video.paused) {
+    playTileVideo(id, video, false); // chegou a trilha de som depois do vídeo
   }
 }
+
+// O navegador só deixa tocar som depois que a pessoa clica/aperta algo na
+// página. Entrando sozinho na sala (volta automática) ainda não houve clique:
+// aí a tela toca muda, aparece o botão "Clique para ativar o som" e o
+// primeiro clique em qualquer lugar liga o som de tudo (direto e plano B).
+function playTileVideo(id, video, isLocal) {
+  video.play().catch((err) => {
+    if (err.name !== 'NotAllowedError' || !video.isConnected) return;
+    markSoundBlocked(id, video);
+    video.play().catch(() => {});
+  });
+}
+
+function markSoundBlocked(id, video) {
+  if (video) {
+    video.muted = true;
+    video.dataset.soundBlocked = '1';
+  }
+  const tile = tiles.get(id);
+  if (!tile || tile.querySelector('.unmute')) return;
+  const b = document.createElement('button');
+  b.className = 'unmute primary';
+  b.textContent = '🔇 Clique para ativar o som';
+  tile.appendChild(b); // o clique em si já libera (ver unlockSound)
+  if (!markSoundBlocked.warned) {
+    markSoundBlocked.warned = true;
+    toast('O navegador bloqueou o som até você clicar na página. Clique em qualquer lugar para ouvir.');
+  }
+}
+
+function unmuteVideo(id) {
+  const tile = tiles.get(id);
+  const video = tile?.querySelector('video');
+  if (video?.dataset.soundBlocked) {
+    delete video.dataset.soundBlocked;
+    video.muted = false;
+    video.play().catch(() => {
+      // Ainda não deixou: volta a tocar mudo.
+      markSoundBlocked(id, video);
+      video.play().catch(() => {});
+    });
+  }
+  if (!video?.dataset.soundBlocked) tile?.querySelector('.unmute')?.remove();
+}
+
+function unlockSound() {
+  for (const id of tiles.keys()) if (id !== myId && tiles.get(id).querySelector('.unmute')) unmuteVideo(id);
+  for (const r of relayIn.values()) if (r.audioCtx?.state === 'suspended') r.audioCtx.resume().catch(() => {});
+  markSoundBlocked.warned = false;
+}
+for (const ev of ['pointerdown', 'keydown', 'touchend']) document.addEventListener(ev, () => setTimeout(unlockSound, 0), true);
 
 function setTileStatus(id, text) {
   const el = tiles.get(id)?.querySelector('.status');
