@@ -3,7 +3,7 @@
 const $ = (id) => document.getElementById(id);
 
 // Versão mostrada no canto da tela (aumente a cada deploy).
-const APP_VERSION = '1.13.3';
+const APP_VERSION = '1.13.4';
 $('appVersion').textContent = 'Telinha v' + APP_VERSION + (window.telinhaApp ? ' · app' : '');
 
 let ws;
@@ -807,15 +807,15 @@ async function onSignal(from, { description, candidate, relay, relayUnsupported,
 // Vale a mais baixa das duas. height = altura máxima; direct/relay = bitrate.
 // ---------------------------------------------------------------------------
 const QUALITY = {
-  ultra: { rank: 6, height: 2160, direct: 20_000_000, relay: 8_000_000 },
-  qhd: { rank: 5, height: 1440, direct: 12_000_000, relay: 5_500_000 },
-  alta: { rank: 4, height: 1080, direct: 6_000_000, relay: 3_500_000 },
-  media: { rank: 3, height: 720, direct: 2_500_000, relay: 1_800_000 },
-  baixa: { rank: 2, height: 480, direct: 1_000_000, relay: 900_000 },
-  minima: { rank: 1, height: 360, direct: 500_000, relay: 500_000 },
+  ultra: { rank: 6, height: 2160, direct: 35_000_000, relay: 10_000_000 },
+  qhd: { rank: 5, height: 1440, direct: 20_000_000, relay: 7_000_000 },
+  alta: { rank: 4, height: 1080, direct: 10_000_000, relay: 5_000_000 },
+  media: { rank: 3, height: 720, direct: 4_500_000, relay: 2_500_000 },
+  baixa: { rank: 2, height: 480, direct: 1_800_000, relay: 1_200_000 },
+  minima: { rank: 1, height: 360, direct: 800_000, relay: 700_000 },
 };
 // Automática: o navegador se adapta sozinho à internet, com esse teto.
-const AUTO_QUALITY = { height: 1080, direct: 6_000_000, relay: 2_500_000 };
+const AUTO_QUALITY = { height: 1080, direct: 10_000_000, relay: 3_500_000 };
 
 // Obs.: no modo "nitidez" o WebRTC segura a resolução e descarta quadros
 // (fica em ~30 fps); para 60 fps use "fluidez".
